@@ -1,5 +1,5 @@
 const mongoose = require('../../db/connection');
-const { schema } = mongoose;
+const { Schema } = mongoose;
 
 const userSchema = new Schema(
   {
