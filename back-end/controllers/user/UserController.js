@@ -1,6 +1,6 @@
 const UserModel = require('../../models/user/User');
 const bcrypt = require('bcrypt');
-const createUserToken = require('../../helpers/createUserToken');
+const userToken = require('../../helpers/createUserToken');
 
 class UserController {
   static async register(req, res) {
@@ -37,11 +37,13 @@ class UserController {
       res.status(422).json({
         message: 'Campo senha diferente do campo confirmação de senha',
       });
+      return;
     }
 
     const userExists = await UserModel.findOne({ email: email });
     if (userExists) {
       res.status(422).json({ message: 'Email inválido, utlize outro' });
+      return;
     }
 
     //Creating a password
@@ -57,20 +59,40 @@ class UserController {
 
     try {
       const newUser = await userCreate.save();
-      await createUserToken(newUser, req, res);
+      await userToken(newUser, req, res);
     } catch (error) {
       res.status(500).json({ message: 'error' });
     }
   }
 
   static async login(req, res) {
-    const {email, password} = req.body;
-    if(!email){
-      res.status(422).json({message: 'E-mail inválido!'})
+    const { email, password } = req.body;
+    if (!email) {
+      res.status(422).json({ message: 'E-mail inválido!' });
+      return;
     }
-    if(!password){
-      res.status(422).json({message: 'Senha inválida!'})
+    if (!password) {
+      res.status(422).json({ message: 'Senha inválida!' });
+      return;
     }
+
+    const checkExistingEmail = await UserModel.findOne({ email: email });
+    if (!checkExistingEmail) {
+      res
+        .status(422)
+        .json({ message: 'Não há usuário cadastrado com esse e-mail!' });
+      return;
+    }
+
+    const checkPassword = await bcrypt.compare(
+      password,
+      checkExistingEmail.password
+    );
+    if (!checkPassword) {
+      res.status(422).json({ message: 'Senha inválida!' });
+      return;
+    }
+    await userToken(checkExistingEmail, req, res);
   }
 }
 
