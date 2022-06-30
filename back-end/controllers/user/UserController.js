@@ -1,6 +1,8 @@
 const UserModel = require('../../models/user/User');
 const bcrypt = require('bcrypt');
 const userToken = require('../../helpers/createUserToken');
+const getToken = require('../../helpers/getToken');
+const jwt = require('jsonwebtoken');
 
 class UserController {
   static async register(req, res) {
@@ -93,6 +95,18 @@ class UserController {
       return;
     }
     await userToken(checkExistingEmail, req, res);
+  }
+
+  static async checkUserToken(req, res) {
+    let currentUser;
+    if(req.headers.authorization){ 
+      const token = getToken(req);
+      const decoded = jwt.verify(token, 'nossosecret');
+      currentUser = await UserModel.findById(decoded.id, {password: 0});
+    } else {
+      currentUser = 0;
+    }
+    res.status(200).send(currentUser);
   }
 }
 
