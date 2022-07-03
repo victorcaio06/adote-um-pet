@@ -99,14 +99,28 @@ class UserController {
 
   static async checkUserToken(req, res) {
     let currentUser;
-    if(req.headers.authorization){ 
+    if (req.headers.authorization) {
       const token = getToken(req);
       const decoded = jwt.verify(token, 'nossosecret');
-      currentUser = await UserModel.findById(decoded.id, {password: 0});
+      currentUser = await UserModel.findById(decoded.id, { password: 0 });
     } else {
       currentUser = 0;
     }
     res.status(200).send(currentUser);
+  }
+
+  static async getUserById(req, res) {
+    const id = req.params.id;
+    const user = await UserModel.findById(id, { password: 0 });
+    if (!user) {
+      res.status(422).json({ message: 'Usuário não encontrado!' });
+      return;
+    }
+    res.status(200).json({ user });
+  }
+
+  static async editUser(req, res) {
+    res.status(200).json({ message: 'Deu certo o update!' });
   }
 }
 
